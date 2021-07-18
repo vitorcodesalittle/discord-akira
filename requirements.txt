@@ -44,3 +44,4 @@ yapf==0.31.0
 yarl==1.6.3
 youtube-dl==2021.5.16
 zipp==3.4.0
+berserk==0.10.0
