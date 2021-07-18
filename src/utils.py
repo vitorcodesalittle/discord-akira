@@ -22,3 +22,4 @@ def seconds_human_friendly(seconds):
         return readable.replace('day', 'dia')
 
     return readable
+

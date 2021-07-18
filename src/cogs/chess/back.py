@@ -3,6 +3,7 @@ import berserk
 import threading
 
 from .exceptions import InvalidMove, InvalidPosition
+from config.settings import LICHESS_TOKEN
 from enum import Enum
 
 class Pieces():
@@ -91,31 +92,6 @@ def pretty(d, indent=0):
       else:
         print('  ' * (indent+1) + str(value))
         
-LICHESS_TOKEN = ''
-RESIGN_ONGOING_GAMES = True
-
-session = berserk.TokenSession(LICHESS_TOKEN)
-client = berserk.Client(session)
-
-print('Starting script')
-
-if RESIGN_ONGOING_GAMES:
-  print('Resigning all on going games')
-  games = client.games.get_ongoing()
-  for game in games:
-    client.board.resign_game(game['gameId'])
-  print('resigned all games')
-
-# https://lichess.org/api#operation/challengeAi
-challange = client.challenges.create_ai(
-  level=1,
-  clock_limit=15*60,
-  clock_increment=15,
-  color=berserk.enums.Color.BLACK
-)
-
-gameid = challange['id']
-
 class GameEvents(threading.Thread):
   def __init__(self, gameid, **kwargs):
     super().__init__(**kwargs)
@@ -162,8 +138,33 @@ class GameControllers(threading.Thread):
       except:
         raise e
 
-events_listener, controllers = GameEvents(gameid), GameControllers(gameid)
 
-events_listener.start()
-controllers.start()
-controllers.join()
+if __name__ == '__main__':
+  RESIGN_ONGOING_GAMES = True
+  session = berserk.TokenSession(LICHESS_TOKEN)
+  client = berserk.Client(session)
+
+  print('Starting script')
+
+  if RESIGN_ONGOING_GAMES:
+    print('Resigning all on going games')
+    games = client.games.get_ongoing()
+    for game in games:
+      client.board.resign_game(game['gameId'])
+    print('resigned all games')
+
+  # https://lichess.org/api#operation/challengeAi
+  challange = client.challenges.create_ai(
+    level=1,
+    clock_limit=15*60,
+    clock_increment=15,
+    color=berserk.enums.Color.BLACK
+  )
+
+  gameid = challange['id']
+
+  events_listener, controllers = GameEvents(gameid), GameControllers(gameid)
+
+  events_listener.start()
+  controllers.start()
+  controllers.join()
